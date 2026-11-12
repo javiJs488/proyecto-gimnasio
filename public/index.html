@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Control de Gimnasio</title>
+    <style>
+      :root {
+        --bg: #f4f6f8;
+        --card: #fff;
+        --txt: #1c2733;
+        --mut: #6b7785;
+        --line: #e3e8ee;
+        --alta: #1a7f4b;
+        --alta-bg: #e3f5ec;
+        --baja: #b3261e;
+        --baja-bg: #fde8e6;
+        --acc: #2457d6;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #12171d;
+          --card: #1b222b;
+          --txt: #e8edf2;
+          --mut: #93a0ae;
+          --line: #2b3540;
+          --alta: #5fd39a;
+          --alta-bg: #16352a;
+          --baja: #ff8f87;
+          --baja-bg: #3a1f1d;
+          --acc: #7da2ff;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          15px/1.4 system-ui,
+          sans-serif;
+        background: var(--bg);
+        color: var(--txt);
+      }
+      header {
+        padding: 16px 20px;
+        font-size: 20px;
+        font-weight: 700;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      header small {
+        font-weight: 400;
+        color: var(--mut);
+        font-size: 13px;
+      }
+      main {
+        display: grid;
+        gap: 16px;
+        padding: 0 20px 20px;
+        grid-template-columns: 1fr 1fr;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px;
+      }
+      section.ancha {
+        grid-column: 1 / -1;
+      }
+      h2 {
+        margin: 0 0 12px;
+        font-size: 16px;
+      }
+      form {
+        display: grid;
+        gap: 8px;
+      }
+      input,
+      select,
+      button {
+        font: inherit;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--bg);
+        color: var(--txt);
+      }
+      button {
+        cursor: pointer;
+        background: var(--acc);
+        color: #fff;
+        border: none;
+        font-weight: 600;
+      }
+      button.eliminar {
+        background: var(--baja);
+        color: #fff;
+        padding: 4px 10px;
+      }
+      button.baja {
+        background: var(--baja-bg);
+        color: var(--baja);
+        padding: 4px 10px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 6px;
+        border-bottom: 1px solid var(--line);
+      }
+      th {
+        color: var(--mut);
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .etiqueta {
+        padding: 2px 8px;
+        border-radius: 99px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .ALTA {
+        background: var(--alta-bg);
+        color: var(--alta);
+      }
+      .BAJA {
+        background: var(--baja-bg);
+        color: var(--baja);
+      }
+      #buscar {
+        width: 100%;
+      }
+      .vacio {
+        color: var(--mut);
+        padding: 12px 0;
+      }
+      #msg {
+        min-height: 20px;
+        color: var(--baja);
+        font-size: 13px;
+      }
+      .nuevo {
+        animation: destello 1.5s;
+      }
+      @keyframes destello {
+        from {
+          background: var(--alta-bg);
+        }
+        to {
+          background: transparent;
+        }
+      }
+      @media (max-width: 800px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      Control de Gimnasio <small id="actualizado">Actualizando…</small>
+    </header>
+    <main>
+      <section>
+        <h2>Registrar socio (alta)</h2>
+        <form id="form">
+          <input name="nombre" placeholder="Nombre completo" required />
+          <input name="telefono" placeholder="Teléfono" />
+          <input name="email" type="email" placeholder="Email" />
+          <select name="membresia_id" id="membresias"></select>
+          <button type="submit">Dar de alta</button>
+          <div id="msg"></div>
+        </form>
+      </section>
+
+      <section>
+        <h2>Movimientos recientes (altas y bajas)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Socio</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="movimientos"></tbody>
+        </table>
+        <div id="movVacio" class="vacio" hidden>Aún no hay movimientos.</div>
+      </section>
+
+      <section class="ancha">
+        <input
+          id="buscar"
+          type="search"
+          placeholder="🔍 Buscar socio por nombre…"
+          autocomplete="off"
+        />
+      </section>
+
+      <section class="ancha">
+        <h2>Socios activos (<span id="total">0</span>)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Teléfono</th>
+              <th>Membresía</th>
+              <th>Vence</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="socios"></tbody>
+        </table>
+        <div id="socVacio" class="vacio" hidden>No hay socios activos.</div>
+      </section>
+
+      <section class="ancha">
+        <h2>Socios dados de baja (<span id="totalBajas">0</span>)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Teléfono</th>
+              <th>Membresía</th>
+              <th>Vencía</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="bajas"></tbody>
+        </table>
+        <div id="bajasVacio" class="vacio" hidden>
+          No hay socios dados de baja.
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const esc = (t) =>
+        String(t ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      let ultimoMov = 0;
+
+      async function api(url, opciones) {
+        const r = await fetch(url, opciones);
+        const datos = await r.json();
+        if (!r.ok) throw new Error(datos.error || "Error");
+        return datos;
+      }
+
+      async function cargarMembresias() {
+        const lista = await api("/api/membresias");
+        $("membresias").innerHTML =
+          '<option value="">Sin membresía todavía</option>' +
+          lista
+            .map(
+              (m) =>
+                `<option value="${m.id}">${esc(m.nombre)} · $${m.precio}</option>`,
+            )
+            .join("");
+      }
+
+      // Quita acentos y mayúsculas: "López" también se encuentra escribiendo "lopez"
+      const limpiar = (t) =>
+        String(t ?? "")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase();
+      let todosSocios = [],
+        todasBajas = [];
+
+      function pintarSocios() {
+        const q = limpiar($("buscar").value.trim());
+        const filtrar = (lista) =>
+          lista.filter((s) => limpiar(s.nombre).includes(q));
+        const socios = filtrar(todosSocios);
+        const bajas = filtrar(todasBajas);
+        const vacio = (texto) =>
+          q ? "Sin resultados para esa búsqueda." : texto;
+
+        $("total").textContent = socios.length;
+        $("socVacio").textContent = vacio("No hay socios activos.");
+        $("socVacio").hidden = socios.length > 0;
+        $("socios").innerHTML = socios
+          .map(
+            (s) => `
+    <tr>
+      <td>${esc(s.nombre)}</td>
+      <td>${esc(s.telefono) || "—"}</td>
+      <td>${esc(s.membresia) || "—"}</td>
+      <td>${esc(s.fecha_vencimiento) || "—"}</td>
+      <td><button class="baja" onclick="darDeBaja(${s.id}, '${esc(s.nombre).replace(/'/g, "")}')">Dar de baja</button></td>
+    </tr>`,
+          )
+          .join("");
+
+        $("totalBajas").textContent = bajas.length;
+        $("bajasVacio").textContent = vacio("No hay socios dados de baja.");
+        $("bajasVacio").hidden = bajas.length > 0;
+        $("bajas").innerHTML = bajas
+          .map(
+            (s) => `
+    <tr>
+      <td>${esc(s.nombre)}</td>
+      <td>${esc(s.telefono) || "—"}</td>
+      <td>${esc(s.membresia) || "—"}</td>
+      <td>${esc(s.fecha_vencimiento) || "—"}</td>
+      <td><button class="eliminar" onclick="eliminarDefinitivo(${s.id}, '${esc(s.nombre).replace(/'/g, "")}')">Eliminar definitivamente</button></td>
+    </tr>`,
+          )
+          .join("");
+      }
+      $("buscar").addEventListener("input", pintarSocios); // filtra mientras escribes
+
+      async function refrescar() {
+        try {
+          const [socios, movs, bajas] = await Promise.all([
+            api("/api/socios"),
+            api("/api/movimientos"),
+            api("/api/bajas"),
+          ]);
+
+          todosSocios = socios;
+          todasBajas = bajas;
+          pintarSocios();
+
+          $("movVacio").hidden = movs.length > 0;
+          $("movimientos").innerHTML = movs
+            .map(
+              (m) => `
+      <tr class="${m.id > ultimoMov && ultimoMov ? "nuevo" : ""}">
+        <td><span class="etiqueta ${m.tipo}">${m.tipo}</span></td>
+        <td>${esc(m.nombre)}</td>
+        <td>${esc(m.fecha_hora)}</td>
+      </tr>`,
+            )
+            .join("");
+          if (movs.length) ultimoMov = movs[0].id;
+
+          $("actualizado").textContent =
+            "Actualizado " + new Date().toLocaleTimeString();
+        } catch (e) {
+          $("actualizado").textContent = "Sin conexión con el servidor";
+        }
+      }
+
+      $("form").addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        $("msg").textContent = "";
+        const datos = Object.fromEntries(new FormData(ev.target));
+        try {
+          await api("/api/socios", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(datos),
+          });
+          ev.target.reset();
+          refrescar();
+        } catch (e) {
+          $("msg").textContent = e.message;
+        }
+      });
+
+      async function darDeBaja(id, nombre) {
+        if (!confirm(`¿Dar de baja a ${nombre}?`)) return;
+        try {
+          await api(`/api/socios/${id}/baja`, { method: "POST" });
+          refrescar();
+        } catch (e) {
+          alert(e.message);
+        }
+      }
+
+      async function eliminarDefinitivo(id, nombre) {
+        if (
+          !confirm(
+            `¿Eliminar DEFINITIVAMENTE a ${nombre}?\nSe borrarán también sus pagos y asistencias. No se puede deshacer.`,
+          )
+        )
+          return;
+        try {
+          await api(`/api/socios/${id}`, { method: "DELETE" });
+          refrescar();
+        } catch (e) {
+          alert(e.message);
+        }
+      }
+
+      cargarMembresias().then(refrescar);
+      setInterval(refrescar, 3000); // se actualiza solo cada 3 segundos
+    </script>
+  </body>
+</html>
